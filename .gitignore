@@ -1,0 +1,6 @@
+*.bak
+*.orig
+*.swp
+*.tmp
+.DS_Store
+.env

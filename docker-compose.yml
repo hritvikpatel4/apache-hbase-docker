@@ -1,0 +1,74 @@
+version: '3.8'
+
+networks:
+  hbase_cluster:
+    name: hbase_cluster
+    driver: bridge
+
+services:
+  zookeeper:
+    image: zookeeper
+    container_name: zookeeper
+    networks:
+      - hbase_cluster
+    ports:
+      - "2181:2181"
+    hostname: zookeeper
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=zookeeper:2888:3888;2181
+  
+  hbasemaster:
+    image: ntwine/apache-hbase:${VERSION:-latest}
+    container_name: hbasemaster
+    networks:
+      - hbase_cluster
+    depends_on:
+      - zookeeper
+    command: master
+    hostname: hbasemaster
+    ports:
+      - "16000:16000"
+      - "16010:16010"
+  
+  hbaseregionserver:
+    image: ntwine/apache-hbase:${VERSION:-latest}
+    container_name: hbaseregionserver
+    networks:
+      - hbase_cluster
+    depends_on:
+      - zookeeper
+      - hbasemaster
+    command: regionserver
+    hostname: hbaseregionserver
+    ports:
+      - "16020:16020"
+      - "16030:16030"
+  
+  hbasethrift:
+    image: ntwine/apache-hbase:${VERSION:-latest}
+    container_name: hbasethrift
+    networks:
+      - hbase_cluster
+    depends_on:
+      - zookeeper
+      - hbasemaster
+      - hbaseregionserver
+    command: thrift
+    hostname: hbasethrift
+    ports:
+      - "9090:9090"
+      - "9095:9095"
+  
+  hbasestargate:
+    image: ntwine/apache-hbase:${VERSION:-latest}
+    container_name: hbasestargate
+    networks:
+      - hbase_cluster
+    depends_on:
+      - zookeeper
+    command: stargate
+    hostname: hbasestargate
+    ports:
+      - "8080:8080"
+      - "8085:8085"
